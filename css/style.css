@@ -1,9 +1,13 @@
-// Function to convert CVE values to links - EXECUTE IMMEDIATELY
+// Function to convert CVE values to links
 function convertCVEToLinks() {
   const table = document.getElementById('dataTable');
-  if (!table) return; // Exit if table doesn't exist
+  if (!table) {
+    console.log('Table not found yet');
+    return;
+  }
   
   const rows = table.getElementsByTagName('tr');
+  console.log('Converting CVE links for', rows.length - 1, 'rows');
   
   // CVE is the 3rd column (index 2)
   for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
@@ -15,23 +19,86 @@ function convertCVEToLinks() {
       const cveValue = cveCell.textContent.trim();
       
       // Create link for CVE
-      if (cveValue) {
+      if (cveValue && cveValue.startsWith('CVE-')) {
         // Check if already a link
         if (!cveCell.querySelector('a')) {
           // Create the link element
           const link = document.createElement('a');
-          link.href = `https://domain/${cveValue}`;
+          // Use correct CVE URL format (adjust domain as needed)
+          link.href = `https://cve.mitre.org/cgi-bin/cvename.cgi?name=${cveValue}`;
           link.target = '_blank';
           link.textContent = cveValue;
           
           // Clear cell and add link
           cveCell.innerHTML = '';
           cveCell.appendChild(link);
+          console.log('Converted:', cveValue);
         }
       }
     }
   }
 }
 
-// Run the conversion immediately
-convertCVEToLinks();
+// **CRITICAL: Set up Mutation Observer to watch for dynamically added tables**
+function setupTableObserver() {
+  const tableContainer = document.getElementById('tableContainer');
+  if (!tableContainer) return;
+  
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'childList') {
+        // Check if a table was added
+        const addedTables = mutation.addedNodes;
+        for (let node of addedTables) {
+          if (node.nodeName === 'TABLE' || (node.querySelector && node.querySelector('table'))) {
+            console.log('Table detected, converting CVE links...');
+            // Small delay to ensure table is fully rendered
+            setTimeout(convertCVEToLinks, 100);
+          }
+        }
+      }
+    });
+  });
+  
+  // Start observing for table additions
+  observer.observe(tableContainer, {
+    childList: true,
+    subtree: true
+  });
+  console.log('Mutation Observer set up to watch for tables');
+}
+
+// Alternative: If you have a click handler that loads the table, hook into it
+// **OPTION 1: If you have a button that loads the table**
+document.addEventListener('click', function(event) {
+  // Check if this is your product load button
+  if (event.target.textContent.includes('RedHatBuildofKeycloak') || 
+      event.target.classList.contains('product-load-button')) {
+    console.log('Product clicked, will convert CVE links soon...');
+    // Wait a bit for table to load, then convert
+    setTimeout(convertCVEToLinks, 500);
+  }
+});
+
+// **OPTION 2: Manual trigger button**
+function addConvertButton() {
+  const container = document.querySelector('div[style*="margin-bottom: 10px"]');
+  if (container) {
+    const convertBtn = document.createElement('button');
+    convertBtn.textContent = 'Convert CVE Links';
+    convertBtn.style.padding = '5px 10px';
+    convertBtn.style.marginLeft = '10px';
+    convertBtn.onclick = convertCVEToLinks;
+    container.appendChild(convertBtn);
+  }
+}
+
+// Initialize everything
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Page loaded, setting up CVE link converter...');
+  setupTableObserver();
+  addConvertButton();
+  
+  // Also try initial conversion in case table is already there
+  setTimeout(convertCVEToLinks, 1000);
+});
