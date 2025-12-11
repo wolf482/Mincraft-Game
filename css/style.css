@@ -1,16 +1,20 @@
+<div style="margin-bottom: 10px;">
+  <input type="text" id="searchInput" placeholder="Search in table..." style="padding: 5px; margin-right: 10px;">
+  <button id="downloadCSV" style="padding: 5px 10px;">Download CSV</button>
+</div>
+
 <script>
+// Search functionality
 document.getElementById('searchInput').addEventListener('keyup', function() {
   const searchText = this.value.toLowerCase();
   const table = document.getElementById('dataTable');
   const rows = table.getElementsByTagName('tr');
   
-  // Start from index 1 to skip header row
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     const cells = row.getElementsByTagName('td');
     let found = false;
     
-    // Check each cell for the search text
     for (let j = 0; j < cells.length; j++) {
       const cellText = cells[j].textContent.toLowerCase();
       if (cellText.includes(searchText)) {
@@ -19,9 +23,47 @@ document.getElementById('searchInput').addEventListener('keyup', function() {
       }
     }
     
-    // Show/hide row based on search result
     row.style.display = found ? '' : 'none';
   }
 });
+
+// CSV Download functionality
+document.getElementById('downloadCSV').addEventListener('click', function() {
+  const table = document.getElementById('dataTable');
+  let csv = [];
+  
+  // Get all rows (including header)
+  const rows = table.querySelectorAll('tr');
+  
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cols = row.querySelectorAll('td, th');
+    const rowData = [];
+    
+    for (let j = 0; j < cols.length; j++) {
+      // Handle commas in data by wrapping in quotes
+      let text = cols[j].textContent;
+      if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+        text = '"' + text.replace(/"/g, '""') + '"';
+      }
+      rowData.push(text);
+    }
+    
+    csv.push(rowData.join(','));
+  }
+  
+  // Create and download the CSV file
+  const csvContent = csv.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'table_data.csv');
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
 </script>
-<input type="text" id="searchInput" placeholder="Search in table..." style="margin-bottom: 10px; padding: 5px;">
