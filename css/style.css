@@ -1,6 +1,8 @@
-// Function to convert CVE values to links
+// Function to convert CVE values to links - EXECUTE IMMEDIATELY
 function convertCVEToLinks() {
   const table = document.getElementById('dataTable');
+  if (!table) return; // Exit if table doesn't exist
+  
   const rows = table.getElementsByTagName('tr');
   
   // CVE is the 3rd column (index 2)
@@ -14,21 +16,22 @@ function convertCVEToLinks() {
       
       // Create link for CVE
       if (cveValue) {
-        // Remove any existing link to avoid duplicates
-        cveCell.innerHTML = '';
-        
-        // Create the link element
-        const link = document.createElement('a');
-        link.href = `https://domain/${cveValue}`;
-        link.target = '_blank';
-        link.textContent = cveValue;
-        
-        // Add the link to the cell
-        cveCell.appendChild(link);
+        // Check if already a link
+        if (!cveCell.querySelector('a')) {
+          // Create the link element
+          const link = document.createElement('a');
+          link.href = `https://domain/${cveValue}`;
+          link.target = '_blank';
+          link.textContent = cveValue;
+          
+          // Clear cell and add link
+          cveCell.innerHTML = '';
+          cveCell.appendChild(link);
+        }
       }
     }
   }
 }
 
-// Initialize CVE links when page loads
-document.addEventListener('DOMContentLoaded', convertCVEToLinks);
+// Run the conversion immediately
+convertCVEToLinks();
